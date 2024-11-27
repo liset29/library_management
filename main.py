@@ -1,14 +1,11 @@
 import json
-from typing import List, Dict, Union, Optional
+from typing import List, Optional
 
-
-Book = Dict[str, Union[int, str]]
+from const import DATA_FILE, Book
 
 
 class Library:
     """Класс для управления библиотекой."""
-
-    DATA_FILE = "library.json"
 
     def __init__(self):
         self.books: List[Book] = self.load_data()
@@ -17,14 +14,14 @@ class Library:
     def load_data() -> List[Book]:
         """Загружает данные из файла или возвращает пустой список, если файл отсутствует."""
         try:
-            with open(Library.DATA_FILE, "r", encoding="utf-8") as file:
+            with open(DATA_FILE, "r", encoding="utf-8") as file:
                 return json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             return []
 
     def save_data(self) -> None:
         """Сохраняет данные в файл."""
-        with open(self.DATA_FILE, "w", encoding="utf-8") as file:
+        with open(DATA_FILE, "w", encoding="utf-8") as file:
             json.dump(self.books, file, indent=4, ensure_ascii=False)
 
     def generate_id(self) -> int:
@@ -33,6 +30,12 @@ class Library:
 
     def add_book(self, title: str, author: str, year: int) -> None:
         """Добавляет новую книгу в библиотеку."""
+
+        if not isinstance(title, str) or not isinstance(author, str):
+            raise TypeError("Название и автор книги должны быть строками")
+        if not isinstance(year, int) or year <= 0:
+            raise ValueError("Год издания должен быть положительным числом")
+
         new_book = {
             "id": self.generate_id(),
             "title": title,
@@ -62,8 +65,8 @@ class Library:
             book
             for book in self.books
             if query.lower() in book["title"].lower()
-            or query.lower() in book["author"].lower()
-            or query.isdigit() and int(query) == book["year"]
+               or query.lower() in book["author"].lower()
+               or query.isdigit() and int(query) == book["year"]
         ]
 
     def change_status(self, book_id: int, new_status: str) -> bool:
@@ -113,7 +116,8 @@ class LibraryApp:
         print("5. Изменить статус книги")
         print("0. Выход")
 
-    def get_int_input(self, prompt: str) -> Optional[int]:
+    @staticmethod
+    def get_int_input(prompt: str) -> Optional[int]:
         """Получает целочисленный ввод от пользователя."""
         try:
             return int(input(prompt))
@@ -122,7 +126,7 @@ class LibraryApp:
             return None
 
     def add_book(self):
-        """Добавление книги через ввод пользователя."""
+        """Добавление книги."""
         title = input("Введите название книги: ")
         author = input("Введите автора книги: ")
         year = self.get_int_input("Введите год издания: ")
@@ -132,7 +136,7 @@ class LibraryApp:
         print("Книга успешно добавлена!")
 
     def delete_book(self):
-        """Удаление книги через ввод пользователя."""
+        """Удаление книги."""
         book_id = self.get_int_input("Введите ID книги, которую нужно удалить: ")
         if book_id is None:
             return
@@ -168,7 +172,7 @@ class LibraryApp:
             )
 
     def change_status(self):
-        """Изменение статуса книги через ввод пользователя."""
+        """Изменение статуса книги."""
         book_id = self.get_int_input("Введите ID книги: ")
         if book_id is None:
             return
@@ -178,6 +182,7 @@ class LibraryApp:
         else:
             print("Ошибка: Книга с таким ID не найдена или статус некорректный.")
 
+    @staticmethod
     def exit_app(self):
         """Завершает работу приложения."""
         print("Выход из программы.")
